@@ -1,54 +1,52 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './user.dto';
-import { UserInterface } from './user.interface';
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { v4 as uuidv4 } from 'uuid';
+import { UserInterface } from '../interfaces/user-interface';
+import { UserCreateDto } from '../dto/user-create-dto';
 
 @Injectable()
 export class UsersService {
-  private users: UserInterface[] = [];
-  private count: number = 0;
-  private accountNumber: number = 4080700000;
+  users: UserInterface[] = [];
 
-  public createUser(dto: CreateUserDto): UserInterface {
-    const user: UserInterface = {
-      id: ++this.count,
-      accountNumber: ++this.accountNumber,
+  createUser(dto: UserCreateDto): UserInterface {
+    const newUser: UserInterface = {
+      id: uuidv4(),
       ...dto,
     };
-
-    this.users.push(user);
-    return user;
+    this.users.push(newUser);
+    return newUser;
   }
 
-  public getAllUsers(): Array<UserInterface> {
+  getAllUsers(): UserInterface[] {
     return this.users;
   }
 
-  public getUserByAccountNumber(accountNumber: number): UserInterface {
-    const foundedUser: UserInterface = this.users.find(
-      (user: UserInterface) => user.accountNumber === accountNumber,
+  getUserByParams(params: Partial<UserCreateDto>): UserInterface {
+    return this.users.find(
+      (user: UserInterface) =>
+        (typeof params.name == 'string' ? params.name === user.name : true) &&
+        (typeof params.email == 'string' ? params.email === user.email : true) &&
+        (typeof params.phone == 'string' ? params.phone === user.phone : true) &&
+        (typeof params.age == 'number' ? params.age === user.age : true),
     );
-    return foundedUser;
   }
 
-  public changeAccountBalance(
-    accountNumber: number,
-    balance: number,
-  ): UserInterface {
-    const user = this.users.find(
-      (user: UserInterface) => user.accountNumber === accountNumber,
-    );
-    user.balance = balance;
-    return user;
+  getUserById(id: string): UserInterface {
+    return this.users.find((user) => user.id === id);
   }
 
-  public deleteUser(accountNumber: number): void {
-    const user: UserInterface = this.users.find(
-      (user) => user.accountNumber === accountNumber,
-    );
-    if (user) {
-      this.users.splice(this.users.indexOf(user), 1);
-    } else {
-      throw new Error('User not found');
-    }
+  updateUserById(id: string, dto: Partial<UserCreateDto>): UserInterface {
+    const user: UserInterface = this.getUserById(id);
+    const index: number = this.users.indexOf(user);
+    this.users[index] = {
+      ...user,
+      ...dto,
+    };
+    return this.users[index];
+  }
+
+  deleteUserById(id: string): void {
+    const user: UserInterface = this.getUserById(id);
+    if (!user) throw new BadRequestException('User not found');
+    this.users.splice(this.users.indexOf(user), 1);
   }
 }

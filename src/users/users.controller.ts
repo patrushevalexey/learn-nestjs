@@ -1,50 +1,50 @@
 import {
-  Body,
   Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
   Post,
+  Get,
+  Body,
   Put,
+  Param,
+  Delete,
 } from '@nestjs/common';
+import { UserCreateDto } from '../dto/user-create-dto';
 import { UsersService } from './users.service';
-import { UserInterface } from './user.interface';
-import { CreateUserDto } from './user.dto';
+import { UserInterface } from '../interfaces/user-interface';
 
-@Controller('api/v1/users')
+@Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post('createUser')
-  createUser(@Body() dto: CreateUserDto): UserInterface {
+  @Post('api/v1/users/create')
+  createUser(@Body() dto: UserCreateDto): UserInterface {
     return this.usersService.createUser(dto);
   }
 
-  @Get('getAllUsers')
+  @Get('api/v1/users/getAll')
   getAllUsers(): UserInterface[] {
     return this.usersService.getAllUsers();
   }
 
-  @Get('getUser/accountNumber/:accountNumber')
-  getUserByAccountNumber(
-    @Param('accountNumber', ParseIntPipe) accountNumber: number,
-  ) {
-    return this.usersService.getUserByAccountNumber(accountNumber);
+  @Get('api/v1/users/getByParams')
+  getUserByParams(@Body() params: Partial<UserCreateDto>) {
+    return this.usersService.getUserByParams(params);
   }
 
-  @Put('changeAccountBalance/:accountNumber/newBalance/:balance')
-  changeAccountBalance(
-    @Param('accountNumber', ParseIntPipe) accountNumber: number,
-    @Param('balance', ParseIntPipe) balance: number,
-  ) {
-    return this.usersService.changeAccountBalance(accountNumber, balance);
+  @Get('api/v1/users/getById/:id')
+  getUserById(@Param('id') id: string): UserInterface {
+    return this.usersService.getUserById(id);
   }
 
-  @Delete('deleteUser/:accountNumber')
-  deleteUser(
-    @Param('accountNumber', ParseIntPipe) accountNumber: number,
-  ): void {
-    this.usersService.deleteUser(accountNumber);
+  @Put('api/v1/user/update/:id')
+  updateUserById(
+    @Param('id') id: string,
+    @Body() dto: Partial<UserCreateDto>,
+  ): UserInterface {
+    return this.usersService.updateUserById(id, dto);
+  }
+
+  @Delete('api/v1/users/delete/:id')
+  deleteUserById(@Param('id') id: string): void {
+    this.usersService.deleteUserById(id);
   }
 }
